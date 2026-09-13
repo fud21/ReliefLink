@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class BenefitProgramIngestService {
@@ -75,27 +76,40 @@ public class BenefitProgramIngestService {
         entity.setName(listItem.servNm());
         entity.setAgency(listItem.jurMnofNm() != null ? listItem.jurMnofNm() : listItem.jurOrgNm());
         entity.setRegionCode(null); // 중앙부처는 전국 대상
+        entity.setSourceUrl(listItem.servDtlLink()); // 상세조회가 아니라 목록조회에서 바로 확보
 
         detailOpt.ifPresentOrElse(detail -> {
             entity.setTargetText(detail.targetDetailContent() != null ? detail.targetDetailContent() : listItem.servDgst());
             entity.setContentText(detail.benefitContent());
-            entity.setApplyText(detail.applyMethodContent());
-            entity.setSourceUrl(detail.detailUrl());
+            entity.setApplyText(buildApplyText(detail.applmetList()));
         }, () -> entity.setTargetText(listItem.servDgst()));
 
         // requiredDocs는 여기서 채우지 않는다. applyText 자유텍스트에서 서류를 뽑는 건
         // 별도 파서/LLM 추출 단계(W3 매칭 로직과 함께)에서 처리하는 게 정확도가 더 나옴.
 
-        if (listItem.lastModYmd() != null) {
+        if (listItem.svcfrstRegTs() != null) {
             try {
-                entity.setRawLastModDate(LocalDate.parse(listItem.lastModYmd(), YMD));
+                entity.setRawLastModDate(LocalDate.parse(listItem.svcfrstRegTs(), YMD));
             } catch (Exception ignored) {
-                // 형식이 다르면 무시. Swagger 확정 후 파싱 포맷 재확인
+                // 형식이 다르면 무시.
             }
         }
         entity.setLastSyncedAt(LocalDateTime.now());
 
         repository.save(entity);
+    }
+
+    /**
+     * applmetList(신청/조사/결정/지급/사후관리 기관 목록) 각 항목을 "{servSeDetailNm}: {servSeDetailLink}"
+     * 형태로 줄바꿈해서 이어붙인다.
+     */
+    private String buildApplyText(List<CentralWelfareDetailItem.ApplyMethodEntry> applmetList) {
+        if (applmetList == null || applmetList.isEmpty()) {
+            return null;
+        }
+        return applmetList.stream()
+                .map(entry -> entry.servSeDetailNm() + ": " + entry.servSeDetailLink())
+                .collect(Collectors.joining("\n"));
     }
 
     private void sleepQuietly(long millis) {

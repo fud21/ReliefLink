@@ -40,15 +40,12 @@ public class BenefitProgram {
     @Column(name = "region_code", length = 10)
     private String regionCode;
 
-    @Lob
     @Column(name = "target_text")
     private String targetText;
 
-    @Lob
     @Column(name = "content_text")
     private String contentText;
 
-    @Lob
     @Column(name = "apply_text")
     private String applyText;
 

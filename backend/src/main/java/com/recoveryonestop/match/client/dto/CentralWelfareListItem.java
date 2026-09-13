@@ -1,20 +1,28 @@
 package com.recoveryonestop.match.client.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 /**
- * 복지서비스 목록조회 1건.
- * servId / servNm은 복지로 실서비스 URL(bokjiro.go.kr ... servId=...&servNm=...)에서 확인된 필드명.
- * 나머지(jurMnofNm 등)는 data.go.kr 유사 API의 관행적 명명이므로 ⚠️ Swagger 승인 후 재검증 필요.
+ * 복지서비스 목록조회(getNationalWelfarelist) 1건 — {@code <servList>} 엘리먼트.
+ * 실제 API 응답(XML) 샘플로 필드 확정. (2026-09-13 실응답 확인)
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CentralWelfareListItem(
-        @JsonProperty("servId") String servId,
-        @JsonProperty("servNm") String servNm,
-        @JsonProperty("servDgst") String servDgst,       // 서비스 요약
-        @JsonProperty("jurMnofNm") String jurMnofNm,     // 소관부처명
-        @JsonProperty("jurOrgNm") String jurOrgNm,       // 소관기관명
-        @JsonProperty("lastModYmd") String lastModYmd    // yyyyMMdd
+        @JacksonXmlProperty(localName = "servId") String servId,
+        @JacksonXmlProperty(localName = "servNm") String servNm,
+        @JacksonXmlProperty(localName = "servDgst") String servDgst,                   // 서비스 요약
+        @JacksonXmlProperty(localName = "jurMnofNm") String jurMnofNm,                 // 소관부처명
+        @JacksonXmlProperty(localName = "jurOrgNm") String jurOrgNm,                   // 소관기관명
+        @JacksonXmlProperty(localName = "servDtlLink") String servDtlLink,             // 상세페이지 URL (목록조회에서 바로 확보)
+        @JacksonXmlProperty(localName = "svcfrstRegTs") String svcfrstRegTs,           // 최초등록일시 (yyyyMMdd)
+        @JacksonXmlProperty(localName = "inqNum") String inqNum,                       // 조회수
+        @JacksonXmlProperty(localName = "sprtCycNm") String sprtCycNm,                 // 지원주기명 (예: "1회성")
+        @JacksonXmlProperty(localName = "srvPvsnNm") String srvPvsnNm,                 // 서비스제공방법명 (예: "전자바우처(바우처)")
+        @JacksonXmlProperty(localName = "onapPsbltYn") String onapPsbltYn,             // 온라인신청 가능여부 (Y/N)
+        @JacksonXmlProperty(localName = "rprsCtadr") String rprsCtadr,                 // 대표문의처
+        @JacksonXmlProperty(localName = "lifeArray") String lifeArray,                 // 생애주기 (콤마 구분 문자열)
+        @JacksonXmlProperty(localName = "trgterIndvdlArray") String trgterIndvdlArray, // 대상특성 (콤마 구분 문자열)
+        @JacksonXmlProperty(localName = "intrsThemaArray") String intrsThemaArray      // 관심주제 (콤마 구분 문자열)
 ) {
 }
