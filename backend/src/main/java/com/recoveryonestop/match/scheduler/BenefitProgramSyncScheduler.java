@@ -30,6 +30,9 @@ public class BenefitProgramSyncScheduler {
         log.info("복지제도 주간 배치 시작");
         ingestService.syncAllCentralPrograms();
 
+        log.info("지자체복지서비스 동기화 시작");
+        ingestService.syncAllLocalPrograms();
+
         log.info("구비서류 기본 체크리스트 적용 시작");
         docsAssignmentService.assignMissingRequiredDocs();
 

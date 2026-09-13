@@ -40,6 +40,17 @@ public class BenefitProgram {
     @Column(name = "region_code", length = 10)
     private String regionCode;
 
+    /**
+     * ⚠️ 임시 필드. 지자체복지서비스 API는 법정동코드가 아니라 "경상남도"/"사천시" 같은
+     * 텍스트로 지역을 준다. 문자열→법정동코드 매핑 테이블이 아직 없어서(인수인계 문서
+     * 미결사항 #5) 우선 원문을 그대로 보관만 하고, regionCode는 null로 둔다.
+     * → 매핑 테이블이 생기면 regionCode를 채우고 이 필드는 감사용 원본으로만 남길 것.
+     * ⚠️ regionCode가 null인 지자체 제도는 현재 매칭 API에서 "전국 대상"으로 취급되므로
+     * (실제로는 그 지역 한정인데) 잘못 노출될 수 있음 — 법정동코드 매핑 전까지는 알려진 한계.
+     */
+    @Column(name = "region_name_raw", length = 100)
+    private String regionNameRaw;
+
     @Column(name = "target_text")
     private String targetText;
 
@@ -128,6 +139,14 @@ public class BenefitProgram {
 
     public void setRegionCode(String regionCode) {
         this.regionCode = regionCode;
+    }
+
+    public String getRegionNameRaw() {
+        return regionNameRaw;
+    }
+
+    public void setRegionNameRaw(String regionNameRaw) {
+        this.regionNameRaw = regionNameRaw;
     }
 
     public String getTargetText() {
