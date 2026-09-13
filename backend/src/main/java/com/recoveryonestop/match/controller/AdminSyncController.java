@@ -1,0 +1,30 @@
+package com.recoveryonestop.match.controller;
+
+import com.recoveryonestop.match.service.BenefitProgramIngestService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * ⚠️ 임시 테스트용 엔드포인트. 중앙부처복지서비스 동기화 배치(원래 주 1회 스케줄러로만 도는 로직)를
+ * 수동으로 즉시 실행해서 확인하려고 만든 것. 인증/권한 체크 없음 — 검증 끝나면 이 컨트롤러 자체를 삭제할 것.
+ */
+@RestController
+public class AdminSyncController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminSyncController.class);
+
+    private final BenefitProgramIngestService ingestService;
+
+    public AdminSyncController(BenefitProgramIngestService ingestService) {
+        this.ingestService = ingestService;
+    }
+
+    @PostMapping("/api/admin/sync-central")
+    public String syncCentral() {
+        log.info("[임시 테스트 엔드포인트] 중앙부처복지서비스 수동 동기화 요청 수신");
+        ingestService.syncAllCentralPrograms();
+        return "OK";
+    }
+}
