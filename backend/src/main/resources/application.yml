@@ -1,0 +1,26 @@
+# ⚠️ 2026-09-13: 이 파일에 운영계정 인증키와 DB 비밀번호가 평문으로 들어있던 걸 환경변수로 뺐습니다.
+# IntelliJ Run Configuration의 Environment variables에 아래 값을 직접 넣어서 실행하세요:
+#   BOKJIRO_SERVICE_KEY=<data.go.kr Encoding 키 그대로>
+#   DB_PASSWORD=<로컬 PostgreSQL 비밀번호>
+# ⚠️ backend 브랜치가 이미 push된 적 있다면, 과거 커밋 히스토리에 키가 남아있을 수 있습니다.
+#    GitHub에서 이 파일이 실제로 올라간 적 있는지 꼭 확인하고, 올라갔다면 data.go.kr에서
+#    키를 재발급받으세요(파일만 지워도 히스토리엔 남아 있어서 소용없음).
+spring:
+  profiles:
+    active: local   # AdminSyncController(@Profile("local")) 등 로컬 전용 빈을 켜는 스위치
+  datasource:
+    url: jdbc:postgresql://localhost:5432/recovery_onestop
+    username: postgres
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate   # 스키마는 flyway/migration SQL로 관리, JPA는 검증만
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+bokjiro:
+  service-key: ${BOKJIRO_SERVICE_KEY}
+  base-url: http://apis.data.go.kr/B554287/NationalWelfareInformationsV001
+  local-base-url: https://apis.data.go.kr/B554287/LocalGovernmentWelfareInformations   # 2026-09-13 실제 End Point 확인됨 (https)
+  num-of-rows: 100
