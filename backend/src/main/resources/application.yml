@@ -1,6 +1,7 @@
 # ⚠️ 2026-09-13: 이 파일에 운영계정 인증키와 DB 비밀번호가 평문으로 들어있던 걸 환경변수로 뺐습니다.
 # IntelliJ Run Configuration의 Environment variables에 아래 값을 직접 넣어서 실행하세요:
 #   BOKJIRO_SERVICE_KEY=<data.go.kr Encoding 키 그대로>
+#   LEGALDONG_SERVICE_KEY=<법정동코드(15077871) 전용 Encoding 키. bokjiro 키와 다른 키임>
 #   DB_PASSWORD=<로컬 PostgreSQL 비밀번호>
 # ⚠️ backend 브랜치가 이미 push된 적 있다면, 과거 커밋 히스토리에 키가 남아있을 수 있습니다.
 #    GitHub에서 이 파일이 실제로 올라간 적 있는지 꼭 확인하고, 올라갔다면 data.go.kr에서
@@ -24,3 +25,16 @@ bokjiro:
   base-url: http://apis.data.go.kr/B554287/NationalWelfareInformationsV001
   local-base-url: https://apis.data.go.kr/B554287/LocalGovernmentWelfareInformations   # 2026-09-13 실제 End Point 확인됨 (https)
   num-of-rows: 100
+
+legaldong:
+  service-key: ${LEGALDONG_SERVICE_KEY}
+  base-url: https://apis.data.go.kr/1741000/StanReginCd   # 2026-09-16 실제 End Point 확인됨
+  num-of-rows: 1000
+
+# ⚠️ 2026-09-18: api-key만 미리 설정해둔 상태. GeminiEmbeddingClient는 아직 없음(실제 응답
+#    확인 후 작성 예정). IntelliJ Run Configuration에 GEMINI_API_KEY 환경변수 추가 필요.
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  base-url: https://generativelanguage.googleapis.com
+  embedding-model: gemini-embedding-001
+  embedding-dimension: 768

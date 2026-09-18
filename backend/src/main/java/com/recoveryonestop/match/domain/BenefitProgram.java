@@ -1,6 +1,10 @@
 package com.recoveryonestop.match.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Array;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -75,9 +79,23 @@ public class BenefitProgram {
     @Column(name = "source_url", length = 500)
     private String sourceUrl;
 
-    /** pgvector 붙이기 전 단계 표시용 플래그. 임베딩 컬럼은 W3에서 추가 예정 */
+    /** true면 embedding 컬럼에 값이 채워진 상태. 배치 임베딩 서비스가 갱신한다. */
     @Column(name = "embedding_generated", nullable = false)
     private boolean embeddingGenerated = false;
+
+    /**
+     * pgvector 임베딩. Gemini gemini-embedding-001, outputDimensionality=768로 생성한다
+     * (V4 마이그레이션 참고). 배치 임베딩 서비스(다음 단계, 아직 미구현)가 채우기 전에는
+     * null이다 — null인 동안은 embeddingGenerated=false로 구분한다.
+     *
+     * ⚠️ Hibernate 6.4+ 네이티브 vector 매핑(org.hibernate.orm:hibernate-vector 모듈,
+     * Spring Boot BOM이 버전 관리)을 사용한다. pgvector-java 같은 별도 JDBC 타입 라이브러리는
+     * 필요 없다.
+     */
+    @Column
+    @JdbcTypeCode(SqlTypes.VECTOR)
+    @Array(length = 768)
+    private float[] embedding;
 
     @Column(name = "raw_last_mod_date")
     private LocalDate rawLastModDate;
@@ -203,6 +221,14 @@ public class BenefitProgram {
 
     public void setEmbeddingGenerated(boolean embeddingGenerated) {
         this.embeddingGenerated = embeddingGenerated;
+    }
+
+    public float[] getEmbedding() {
+        return embedding;
+    }
+
+    public void setEmbedding(float[] embedding) {
+        this.embedding = embedding;
     }
 
     public LocalDate getRawLastModDate() {

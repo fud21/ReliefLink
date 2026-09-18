@@ -18,7 +18,7 @@ import java.util.Map;
 @Component
 public class DefaultRequiredDocsProvider {
 
-    private static final List<String> HOUSING_DOCS = List.of(
+    private static final List<String> RESIDENTIAL_DOCS = List.of(
             "신분증 사본",
             "주민등록등본",
             "피해사실확인서",
@@ -32,7 +32,7 @@ public class DefaultRequiredDocsProvider {
             "통장 사본"
     );
 
-    private static final List<String> AGRICULTURE_DOCS = List.of(
+    private static final List<String> FARM_DOCS = List.of(
             "신분증 사본",
             "농지원부 또는 농업경영체 등록확인서",
             "피해사실확인서",
@@ -46,9 +46,9 @@ public class DefaultRequiredDocsProvider {
     );
 
     private static final Map<ProgramCategory, List<String>> DOCS_BY_CATEGORY = Map.of(
-            ProgramCategory.HOUSING, HOUSING_DOCS,
+            ProgramCategory.RESIDENTIAL, RESIDENTIAL_DOCS,
             ProgramCategory.BUSINESS, BUSINESS_DOCS,
-            ProgramCategory.AGRICULTURE, AGRICULTURE_DOCS,
+            ProgramCategory.FARM, FARM_DOCS,
             ProgramCategory.GENERAL, GENERAL_DOCS
     );
 
@@ -58,11 +58,11 @@ public class DefaultRequiredDocsProvider {
             "소상공인", "사업자", "사업장", "중소기업", "자영업", "상공인"
     );
 
-    private static final List<String> AGRICULTURE_KEYWORDS = List.of(
+    private static final List<String> FARM_KEYWORDS = List.of(
             "농업", "농작물", "농지", "농가", "축산", "어업", "어가"
     );
 
-    private static final List<String> HOUSING_KEYWORDS = List.of(
+    private static final List<String> RESIDENTIAL_KEYWORDS = List.of(
             "주택", "주거", "가구", "임대", "전세", "월세"
     );
 
@@ -76,11 +76,11 @@ public class DefaultRequiredDocsProvider {
         if (containsAny(haystack, BUSINESS_KEYWORDS)) {
             return ProgramCategory.BUSINESS;
         }
-        if (containsAny(haystack, AGRICULTURE_KEYWORDS)) {
-            return ProgramCategory.AGRICULTURE;
+        if (containsAny(haystack, FARM_KEYWORDS)) {
+            return ProgramCategory.FARM;
         }
-        if (containsAny(haystack, HOUSING_KEYWORDS)) {
-            return ProgramCategory.HOUSING;
+        if (containsAny(haystack, RESIDENTIAL_KEYWORDS)) {
+            return ProgramCategory.RESIDENTIAL;
         }
         return ProgramCategory.GENERAL;
     }
