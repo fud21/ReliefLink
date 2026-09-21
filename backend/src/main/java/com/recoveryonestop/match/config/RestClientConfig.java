@@ -31,7 +31,7 @@ import java.time.Duration;
  * 부족하면 늘려야 한다는 신호이니 콘솔 로그로 확인할 것.
  */
 @Configuration
-@EnableConfigurationProperties({BokjiroProperties.class, LegalDongProperties.class, GeminiProperties.class})
+@EnableConfigurationProperties({BokjiroProperties.class, LegalDongProperties.class, GeminiProperties.class, SafetyDataProperties.class})
 public class RestClientConfig {
 
     @Bean

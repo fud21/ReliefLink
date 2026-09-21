@@ -181,6 +181,21 @@ export default function ReportPage() {
 
   const [targetType, setTargetType] = useState("RESIDENTIAL");
   const [damageLevel, setDamageLevel] = useState("MODERATE");
+  const [disasterType, setDisasterType] = useState("침수");
+  const [occurredAt, setOccurredAt] = useState("2026-08-12T15:10");
+  const [recoveryStatus, setRecoveryStatus] = useState("ONGOING");
+  const [damageAddress, setDamageAddress] = useState("경상남도 거제시 장평1로 123");
+
+  const [householdSize, setHouseholdSize] = useState("THREE");
+  const [housingType, setHousingType] = useState("OWN");
+
+  const [businessName, setBusinessName] = useState("");
+  const [businessType, setBusinessType] = useState("");
+  const [premisesType, setPremisesType] = useState("LEASED");
+  const [operatingStatus, setOperatingStatus] = useState("SUSPENDED");
+  const [suspensionStartDate, setSuspensionStartDate] = useState("2026-08-12");
+  const [expectedSuspensionPeriod, setExpectedSuspensionPeriod] = useState("THREE_TO_SEVEN_DAYS");
+
   const [photos, setPhotos] = useState({});
   const [businessDamageTypes, setBusinessDamageTypes] = useState([]);
 
@@ -226,6 +241,44 @@ export default function ReportPage() {
         ? prev.filter((item) => item !== value)
         : [...prev, value]
     );
+  };
+
+  const handleProceedToAnalysis = () => {
+    const matchRequest = {
+      regionCode: null,
+      damageAddress,
+      disasterType,
+      targetType,
+      damageLevel,
+      recoveryStatus,
+      occurredAt,
+      householdInfo:
+        targetType === "RESIDENTIAL"
+          ? { householdSize, housingType }
+          : null,
+      businessInfo:
+        targetType === "BUSINESS"
+          ? {
+              businessName,
+              businessType,
+              premisesType,
+              operatingStatus,
+              suspensionStartDate:
+                operatingStatus === "SUSPENDED" ? suspensionStartDate : null,
+              expectedSuspensionPeriod,
+              damageItems: businessDamageTypes,
+            }
+          : null,
+      // 파일 저장 API가 DB/BE 통합 후 붙으면 실제 업로드 URL로 교체한다.
+      photoUrls: [],
+    };
+
+    sessionStorage.setItem(
+      "relieflink.matchRequest",
+      JSON.stringify(matchRequest)
+    );
+
+    navigate("/analysis");
   };
 
   return (
@@ -280,7 +333,7 @@ export default function ReportPage() {
         <div className="form-grid">
           <label>
             재난 유형
-            <select defaultValue="침수">
+            <select value={disasterType} onChange={(event) => setDisasterType(event.target.value)}>
               <option>침수</option>
               <option>화재</option>
               <option>산사태</option>
@@ -311,7 +364,7 @@ export default function ReportPage() {
 
           <label>
             발생 시각
-            <input type="datetime-local" defaultValue="2026-08-12T15:10" />
+            <input type="datetime-local" value={occurredAt} onChange={(event) => setOccurredAt(event.target.value)} />
             <small className="input-help">
               피해가 발생했거나 처음 확인한 시각을 입력해주세요.
             </small>
@@ -319,10 +372,10 @@ export default function ReportPage() {
 
           <label>
             현재 피해 상태
-            <select defaultValue="피해 지속">
-              <option>피해 지속</option>
-              <option>임시 복구</option>
-              <option>복구 완료</option>
+            <select value={recoveryStatus} onChange={(event) => setRecoveryStatus(event.target.value)}>
+              <option value="ONGOING">피해 지속</option>
+              <option value="TEMPORARY_RECOVERY">임시 복구</option>
+              <option value="COMPLETED">복구 완료</option>
             </select>
             <small className="input-help">
               신고를 작성하는 현재 시점의 복구 상태를 선택해주세요.
@@ -333,7 +386,8 @@ export default function ReportPage() {
             피해 현장 주소
             <input
               type="text"
-              defaultValue="경상남도 거제시 장평1로 123"
+              value={damageAddress}
+              onChange={(event) => setDamageAddress(event.target.value)}
             />
             <small className="input-help">
               거주지 주소가 아니라 실제 피해가 발생한 현장 주소를 입력해주세요.
@@ -344,11 +398,11 @@ export default function ReportPage() {
             <>
               <label>
                 세대 정보
-                <select defaultValue="3인 가구">
-                  <option>1인 가구</option>
-                  <option>2인 가구</option>
-                  <option>3인 가구</option>
-                  <option>4인 이상</option>
+                <select value={householdSize} onChange={(event) => setHouseholdSize(event.target.value)}>
+                  <option value="ONE">1인 가구</option>
+                  <option value="TWO">2인 가구</option>
+                  <option value="THREE">3인 가구</option>
+                  <option value="FOUR_OR_MORE">4인 이상</option>
                 </select>
                 <small className="input-help">
                   일부 지원제도는 가구 규모를 기준으로 지원 범위가 달라질 수 있습니다.
@@ -357,11 +411,11 @@ export default function ReportPage() {
 
               <label>
                 주거 형태
-                <select defaultValue="자가">
-                  <option>자가</option>
-                  <option>전세</option>
-                  <option>월세</option>
-                  <option>기타</option>
+                <select value={housingType} onChange={(event) => setHousingType(event.target.value)}>
+                  <option value="OWN">자가</option>
+                  <option value="JEONSE">전세</option>
+                  <option value="WOLSE">월세</option>
+                  <option value="OTHER">기타</option>
                 </select>
                 <small className="input-help">
                   피해 주택의 점유 형태를 선택해주세요.
@@ -410,7 +464,7 @@ export default function ReportPage() {
           <div className="form-grid">
             <label>
               사업장명
-              <input type="text" placeholder="예: Relief 카페" />
+              <input type="text" placeholder="예: Relief 카페" value={businessName} onChange={(event) => setBusinessName(event.target.value)} />
               <small className="input-help">
                 피해가 발생한 실제 사업장명을 입력해주세요.
               </small>
@@ -418,16 +472,16 @@ export default function ReportPage() {
 
             <label>
               업종
-              <select defaultValue="">
+              <select value={businessType} onChange={(event) => setBusinessType(event.target.value)}>
                 <option value="" disabled>
                   업종 선택
                 </option>
-                <option>음식점업</option>
-                <option>도·소매업</option>
-                <option>서비스업</option>
-                <option>숙박업</option>
-                <option>제조업</option>
-                <option>기타</option>
+                <option value="음식점업">음식점업</option>
+                <option value="도·소매업">도·소매업</option>
+                <option value="서비스업">서비스업</option>
+                <option value="숙박업">숙박업</option>
+                <option value="제조업">제조업</option>
+                <option value="기타">기타</option>
               </select>
               <small className="input-help">
                 가장 가까운 주 업종을 선택해주세요.
@@ -436,19 +490,19 @@ export default function ReportPage() {
 
             <label>
               사업장 형태
-              <select defaultValue="임차">
-                <option>자가</option>
-                <option>임차</option>
-                <option>기타</option>
+              <select value={premisesType} onChange={(event) => setPremisesType(event.target.value)}>
+                <option value="OWN">자가</option>
+                <option value="LEASED">임차</option>
+                <option value="OTHER">기타</option>
               </select>
             </label>
 
             <label>
               현재 영업 상태
-              <select defaultValue="영업중단">
-                <option>정상 영업</option>
-                <option>부분 영업</option>
-                <option>영업중단</option>
+              <select value={operatingStatus} onChange={(event) => setOperatingStatus(event.target.value)}>
+                <option value="NORMAL">정상 영업</option>
+                <option value="PARTIAL">부분 영업</option>
+                <option value="SUSPENDED">영업중단</option>
               </select>
               <small className="input-help">
                 재난 피해로 인해 현재 정상 영업이 가능한지 선택해주세요.
@@ -457,17 +511,17 @@ export default function ReportPage() {
 
             <label>
               영업중단 시작일
-              <input type="date" defaultValue="2026-08-12" />
+              <input type="date" value={suspensionStartDate} onChange={(event) => setSuspensionStartDate(event.target.value)} />
             </label>
 
             <label>
               예상 영업중단 기간
-              <select defaultValue="3~7일">
-                <option>1~2일</option>
-                <option>3~7일</option>
-                <option>1~2주</option>
-                <option>2주 이상</option>
-                <option>확인 불가</option>
+              <select value={expectedSuspensionPeriod} onChange={(event) => setExpectedSuspensionPeriod(event.target.value)}>
+                <option value="ONE_TO_TWO_DAYS">1~2일</option>
+                <option value="THREE_TO_SEVEN_DAYS">3~7일</option>
+                <option value="ONE_TO_TWO_WEEKS">1~2주</option>
+                <option value="OVER_TWO_WEEKS">2주 이상</option>
+                <option value="UNKNOWN">확인 불가</option>
               </select>
               <small className="input-help">
                 현재 예상 기간이며 이후 진행상황에서 수정할 수 있습니다.
@@ -574,7 +628,7 @@ export default function ReportPage() {
             현재 위치 확인
           </span>
 
-          <span>경상남도 거제시 장평1로 123</span>
+          <span>{damageAddress}</span>
 
           <span>
             <ImagePlus size={16} />
@@ -584,7 +638,7 @@ export default function ReportPage() {
 
         <button
           className="primary-btn full"
-          onClick={() => navigate("/analysis")}
+          onClick={handleProceedToAnalysis}
         >
           <Sparkles size={18} />
           AI 분석 요청

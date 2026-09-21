@@ -30,7 +30,7 @@ export function loadKakaoMap() {
 
     script.src =
       `https://dapi.kakao.com/v2/maps/sdk.js` +
-      `?appkey=${appKey}&autoload=false`;
+      `?appkey=${appKey}&autoload=false&libraries=services`;
 
     script.async = true;
 

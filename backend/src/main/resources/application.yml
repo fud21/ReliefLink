@@ -3,6 +3,7 @@
 #   BOKJIRO_SERVICE_KEY=<data.go.kr Encoding 키 그대로>
 #   LEGALDONG_SERVICE_KEY=<법정동코드(15077871) 전용 Encoding 키. bokjiro 키와 다른 키임>
 #   DB_PASSWORD=<로컬 PostgreSQL 비밀번호>
+#   SAFETY_DATA_SERVICE_KEY=<재난안전데이터공유플랫폼 긴급재난문자 API 키>
 # ⚠️ backend 브랜치가 이미 push된 적 있다면, 과거 커밋 히스토리에 키가 남아있을 수 있습니다.
 #    GitHub에서 이 파일이 실제로 올라간 적 있는지 꼭 확인하고, 올라갔다면 data.go.kr에서
 #    키를 재발급받으세요(파일만 지워도 히스토리엔 남아 있어서 소용없음).
@@ -38,3 +39,10 @@ gemini:
   base-url: https://generativelanguage.googleapis.com
   embedding-model: gemini-embedding-001
   embedding-dimension: 768
+
+# 행정안전부 긴급재난문자 - 재난안전데이터공유플랫폼
+# IntelliJ Run Configuration / OS 환경변수에 SAFETY_DATA_SERVICE_KEY를 설정하세요.
+safetydata:
+  service-key: ${SAFETY_DATA_SERVICE_KEY:}
+  base-url: https://www.safetydata.go.kr/V2/api/DSSP-IF-00247
+  num-of-rows: 50

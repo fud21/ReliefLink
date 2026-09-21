@@ -7,19 +7,62 @@ import {
   Users
 } from "lucide-react";
 
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { getDisasters } from "../api/disasterApi";
 import KakaoMap from "../components/KakaoMap";
 import SectionCard from "../components/SectionCard";
-import { realtimeAlerts } from "../data/mockData";
+
+function getAlertTone(item) {
+  if (item.emergencyLevel === "위급재난") return "red";
+  if (item.emergencyLevel === "긴급재난") return "orange";
+  return "yellow";
+}
+
+function formatAlertTime(value) {
+  if (!value) return "-";
+
+  const match = String(value).match(/(\d{2}):(\d{2})(?::\d{2})?/);
+  return match ? `${match[1]}:${match[2]}` : String(value);
+}
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const [disasters, setDisasters] = useState([]);
+  const [disasterLoading, setDisasterLoading] = useState(true);
+  const [disasterError, setDisasterError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getDisasters()
+      .then((data) => {
+        if (!cancelled) {
+          setDisasters(Array.isArray(data) ? data : []);
+        }
+      })
+      .catch((error) => {
+        console.error("[Dashboard] 재난 API 호출 실패:", error);
+        if (!cancelled) setDisasterError(error.message);
+      })
+      .finally(() => {
+        if (!cancelled) setDisasterLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const realtimeAlerts = useMemo(
+    () => disasters.slice(0, 5),
+    [disasters]
+  );
 
   return (
     <div className="page">
       <section className="home-hero">
-
         <div className="home-hero-copy">
           <div className="eyebrow">
             재난 피해 사후지원 원스톱 서비스
@@ -62,46 +105,101 @@ export default function DashboardPage() {
             className="home-hero-image"
           />
         </div>
-
       </section>
 
       <div className="dashboard-grid">
         <SectionCard className="map-card">
-          <KakaoMap />
+          <KakaoMap disasters={disasters} />
         </SectionCard>
 
         <SectionCard
           title="실시간 재난 알림"
           className="alerts-card"
         >
-          <div className="alert-list">
-            {realtimeAlerts.map((item) => (
-              <div
-                className="alert-row"
-                key={`${item.type}-${item.time}`}
-              >
-                <div className={`alert-icon ${item.tone}`}>
-                  {item.tone === "red"
-                    ? <Flame size={17} />
-                    : <MapPin size={17} />}
-                </div>
-
-                <div className="alert-copy">
-                  <strong>{item.type}</strong>
-                  <span>{item.place}</span>
-                </div>
-
-                <div className="alert-time">
-                  {item.time}
-                </div>
-              </div>
-            ))}
+          <div className="alerts-overview">
+            <span className={`live-dot ${disasterError ? "error" : ""}`} />
+            <span>
+              {disasterLoading
+                ? "재난 알림 확인 중"
+                : disasterError
+                  ? "재난 알림 연결 오류"
+                  : `오늘 ${disasters.length}건`}
+            </span>
           </div>
 
-          <button className="text-button">
-            더보기
-            <ChevronRight size={16} />
-          </button>
+          <div className="alert-list">
+            {disasterLoading && (
+              <div className="alert-state">
+                <div className="alert-state-icon">
+                  <Bell size={22} />
+                </div>
+                <strong>재난 정보를 불러오는 중입니다.</strong>
+                <span>잠시만 기다려 주세요.</span>
+              </div>
+            )}
+
+            {!disasterLoading && disasterError && (
+              <div className="alert-state error">
+                <div className="alert-state-icon">
+                  <Bell size={22} />
+                </div>
+                <strong>재난 정보를 불러오지 못했습니다.</strong>
+                <span>{disasterError}</span>
+              </div>
+            )}
+
+            {!disasterLoading && !disasterError && realtimeAlerts.length === 0 && (
+              <div className="alert-state">
+                <div className="alert-state-icon">
+                  <Bell size={22} />
+                </div>
+                <strong>현재 조회된 재난 알림이 없습니다.</strong>
+                <span>
+                  새 재난문자가 수집되면 이 영역에 표시됩니다.
+                </span>
+              </div>
+            )}
+
+            {realtimeAlerts.map((item) => {
+              const tone = getAlertTone(item);
+
+              return (
+                <div
+                  className="alert-row"
+                  key={item.id || `${item.type}-${item.occurredAt}-${item.region}`}
+                  title={item.message || ""}
+                >
+                  <div className={`alert-icon ${tone}`}>
+                    {tone === "red"
+                      ? <Flame size={17} />
+                      : <MapPin size={17} />}
+                  </div>
+
+                  <div className="alert-copy">
+                    <strong>{item.type || "재난 알림"}</strong>
+                    <span>{item.region || "지역 정보 없음"}</span>
+                  </div>
+
+                  <div className="alert-time">
+                    {formatAlertTime(item.occurredAt)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {realtimeAlerts.length > 0 && (
+            <div className="alerts-footer">
+              <span>최근 {realtimeAlerts.length}건 표시</span>
+              <button
+                className="text-button"
+                onClick={() => navigate("/disasters")}
+              >
+                더보기
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
         </SectionCard>
       </div>
 
@@ -111,7 +209,7 @@ export default function DashboardPage() {
             <Bell size={20} />
           </div>
           <span>오늘 재난 알림</span>
-          <strong>4건</strong>
+          <strong>{disasterLoading ? "-" : `${disasters.length}건`}</strong>
         </div>
 
         <div className="stat-card">

@@ -92,9 +92,7 @@ public class BenefitProgram {
      * Spring Boot BOM이 버전 관리)을 사용한다. pgvector-java 같은 별도 JDBC 타입 라이브러리는
      * 필요 없다.
      */
-    @Column
-    @JdbcTypeCode(SqlTypes.VECTOR)
-    @Array(length = 768)
+    @Transient
     private float[] embedding;
 
     @Column(name = "raw_last_mod_date")

@@ -111,20 +111,39 @@ public class MatchService {
      * 지역+카테고리 필터 결과를 그대로 반환한다 — 임베딩이 안 된다고 매칭 자체가 실패하면
      * 안 된다는 원칙(GeminiEmbeddingClient와 동일한 fail-soft 방침).
      */
-    private List<BenefitProgram> applySimilarityRanking(List<BenefitProgram> categoryFiltered, MatchRequest request) {
+    private List<BenefitProgram> applySimilarityRanking(
+            List<BenefitProgram> categoryFiltered,
+            MatchRequest request
+    ) {
+
+        boolean hasEmbedding = categoryFiltered.stream()
+                .anyMatch(p -> p.getEmbedding() != null);
+
+        if (!hasEmbedding) {
+            log.warn("저장된 임베딩이 없어 유사도 랭킹을 건너뜀");
+            return categoryFiltered.stream()
+                    .limit(TOP_N)
+                    .toList();
+        }
+
         String queryText = describeRequest(request);
+
         if (queryText.isBlank()) {
-            log.warn("요청에서 임베딩할 텍스트를 만들 수 없어 유사도 랭킹을 건너뜀");
             return categoryFiltered;
         }
 
-        float[] queryEmbedding = geminiEmbeddingClient.embed(queryText);
+        float[] queryEmbedding =
+                geminiEmbeddingClient.embed(queryText);
+
         if (queryEmbedding == null) {
-            log.warn("요청 임베딩 실패 - 유사도 랭킹 없이 지역+카테고리 필터 결과를 그대로 반환");
             return categoryFiltered;
         }
 
-        return similarityRanker.rankBySimilarity(categoryFiltered, queryEmbedding, TOP_N);
+        return similarityRanker.rankBySimilarity(
+                categoryFiltered,
+                queryEmbedding,
+                TOP_N
+        );
     }
 
     /** MatchRequest의 구조화된 필드들을 임베딩용 자연어 문장으로 합친다. */
