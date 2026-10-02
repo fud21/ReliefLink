@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:relieflink;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  task:
+    scheduling:
+      enabled: false
+
+bokjiro:
+  service-key: test-service-key
+  base-url: http://localhost/central
+  local-base-url: http://localhost/local
+  num-of-rows: 10
+
+jwt:
+  secret: dGVzdC1qd3Qtc2VjcmV0LWtleS0zMi1ieXRlcy1sb25nISE=
+  access-token-expiration-ms: 1800000
+  refresh-token-expiration-ms: 1209600000
+  refresh-cookie-secure: false
+
+security:
+  cors:
+    allowed-origins: http://localhost:5173
