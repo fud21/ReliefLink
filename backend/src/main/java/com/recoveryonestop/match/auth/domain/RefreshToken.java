@@ -32,7 +32,11 @@ public class RefreshToken {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "token_hash", nullable = false, length = 64, columnDefinition = "char(64)")
+    // ⚠️ 2026-10-02: columnDefinition = "char(64)"로 돼 있던 걸 제거했다. Hibernate 스키마
+    // 검증(ddl-auto: validate)이 그 리터럴을 VARCHAR로 해석해서 실제 DB의 CHAR(64) 컬럼과
+    // 충돌했었다(V7 마이그레이션으로 DB 컬럼도 VARCHAR(64)로 맞춤). length=64만 남겨두면
+    // Hibernate가 기본으로 VARCHAR(64)를 기대/생성해서 서로 일치한다.
+    @Column(name = "token_hash", nullable = false, length = 64)
     private String tokenHash;
 
     @Column(name = "expires_at", nullable = false)

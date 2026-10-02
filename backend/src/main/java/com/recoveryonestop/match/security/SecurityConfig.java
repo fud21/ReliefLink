@@ -53,6 +53,11 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(authorize -> authorize
+                        // ⚠️ 2026-10-02: /api/match는 사실 처음부터 POST 전용
+                        // (@RequestBody MatchRequest) 엔드포인트였다. 중간에 GET으로
+                        // permitAll을 걸었다가 "405 Request method 'GET' is not
+                        // supported"를 401처럼 보이는 공통 에러 포맷으로 가려서 헷갈렸던
+                        //것뿐 — 실제 호출은 항상 POST + JSON body여야 한다.
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/signup",
                                 "/api/auth/login",
@@ -61,6 +66,9 @@ public class SecurityConfig {
                                 "/api/match",
                                 "/api/admin/sync-central",
                                 "/api/admin/sync-local")
+                        .permitAll()
+                        // /api/disasters는 실제로 @GetMapping이라 GET이 맞다.
+                        .requestMatchers(HttpMethod.GET, "/api/disasters")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
                         .anyRequest().authenticated())
