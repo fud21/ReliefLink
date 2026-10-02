@@ -22,6 +22,17 @@ import java.util.List;
  *
  * 공식 응답 wrapper가 변경되더라도 핵심 row(SN/MSG_CN/RCPTN_RGN_NM)를 찾을 수 있도록
  * JsonNode를 재귀 탐색한다. API 장애 시 홈 전체를 죽이지 않도록 빈 목록을 반환한다.
+ *
+ * regionCodes는 여기서는 채우지 않고 빈 리스트로 둔다 — region 원문을 법정동코드로
+ * 바꾸는 건 DisasterService가 AddressToRegionCodeService로 담당한다(이 클라이언트는
+ * 원본 API 응답을 그대로 옮기는 역할만 한다).
+ *
+ * ⚠️ 2026-10-02: HTTP 상태코드는 200이면서 바디 안에 {"header":{"resultCode":"32",...},
+ * "body":null} 같은 애플리케이션 레벨 에러를 담아 보내는 경우가 실제로 있었다(IP 미등록
+ * 에러). 이런 응답은 예외를 던지지 않아서 기존에는 조용히 빈 목록으로만 처리되고
+ * 로그에 아무 흔적도 안 남았다 — 그래서 디버깅할 때 "API가 실패한 건지, 그냥 오늘
+ * 재난문자가 없는 건지" 구분이 안 됐다. header는 있는데 body가 없는/null인 경우를
+ * 에러 응답으로 보고 경고 로그를 남기도록 했다.
  */
 @Component
 public class SafetyDisasterClient {
@@ -77,6 +88,9 @@ public class SafetyDisasterClient {
     private List<DisasterAlertResponse> parse(String body) {
         try {
             JsonNode root = objectMapper.readTree(body);
+
+            warnIfErrorResponse(root);
+
             List<JsonNode> rows = new ArrayList<>();
             collectRows(root, rows);
 
@@ -91,13 +105,35 @@ public class SafetyDisasterClient {
                         text(row, "CRT_DT"),
                         text(row, "RCPTN_RGN_ID"),
                         text(row, "DST_SE_ID"),
-                        text(row, "EMRG_STEP_ID")
+                        text(row, "EMRG_STEP_ID"),
+                        List.of()
                 ));
             }
             return results;
         } catch (Exception e) {
             log.warn("긴급재난문자 API JSON 파싱 실패: {}", e.getMessage());
             return List.of();
+        }
+    }
+
+    /**
+     * {"header":{"resultCode":"32","resultMsg":"UNREGISTERED IP ERROR","errorMsg":"등록되지
+     * 않은 IP"},"body":null}처럼 HTTP 200이지만 애플리케이션 레벨 에러를 담은 응답을
+     * header는 있는데 body가 없는/null인 모양으로 감지해서 경고 로그를 남긴다. 예외를
+     * 던지지는 않는다 — 이후 collectRows()가 어차피 빈 목록을 반환하므로 호출부 동작은
+     * 그대로 "빈 목록"이고, 이 로그는 그 원인을 콘솔에서 바로 알아볼 수 있게 해주는
+     * 용도다.
+     */
+    private void warnIfErrorResponse(JsonNode root) {
+        JsonNode header = root.get("header");
+        if (header == null) {
+            return;
+        }
+        JsonNode bodyNode = root.get("body");
+        boolean bodyMissing = bodyNode == null || bodyNode.isNull();
+        if (bodyMissing) {
+            log.warn("긴급재난문자 API가 에러 응답을 반환함: resultCode={}, resultMsg={}, errorMsg={}",
+                    text(header, "resultCode"), text(header, "resultMsg"), text(header, "errorMsg"));
         }
     }
 
