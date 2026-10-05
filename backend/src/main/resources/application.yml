@@ -9,8 +9,6 @@
 #    GitHub에서 이 파일이 실제로 올라간 적 있는지 꼭 확인하고, 올라갔다면 data.go.kr에서
 #    키를 재발급받으세요(파일만 지워도 히스토리엔 남아 있어서 소용없음).
 spring:
-  profiles:
-    active: local   # AdminSyncController(@Profile("local")) 등 로컬 전용 빈을 켜는 스위치
   datasource:
     url: jdbc:postgresql://localhost:5432/recovery_onestop
     username: postgres
