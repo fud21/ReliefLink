@@ -63,12 +63,18 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/refresh",
                                 "/api/auth/logout",
-                                "/api/match",
-                                "/api/admin/sync-central",
-                                "/api/admin/sync-local")
+                                "/api/match")
                         .permitAll()
                         // /api/disasters는 실제로 @GetMapping이라 GET이 맞다.
                         .requestMatchers(HttpMethod.GET, "/api/disasters")
+                        .permitAll()
+                        // ⚠️ 2026-10-07: AdminSyncController는 이미 @Profile("local")로
+                        // 로컬 개발 프로파일에서만 존재하는 임시 테스트용 컨트롤러다
+                        // (운영 배포 시 profile 자체가 local이 아니면 빈이 안 만들어짐).
+                        // sync-central/sync-local 두 개만 콕 집어 permitAll 하던 걸
+                        // 엔드포인트 추가할 때마다 깜빡하고 안 넣어서(assign-required-docs가
+                        // 바로 그 사례) 401이 났던 거라, 아예 /api/admin/** 전체를 허용한다.
+                        .requestMatchers("/api/admin/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
                         .anyRequest().authenticated())

@@ -10,6 +10,7 @@ import com.recoveryonestop.match.service.BenefitProgramIngestService;
 import com.recoveryonestop.match.service.ProgramEmbeddingBatchService;
 import com.recoveryonestop.match.service.RegionCodeSyncService;
 import com.recoveryonestop.match.service.RegionNameMappingService;
+import com.recoveryonestop.match.service.RequiredDocsAssignmentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -44,6 +45,7 @@ public class AdminSyncController {
     private final RegionNameMappingService regionNameMappingService;
     private final GeminiEmbeddingClient geminiEmbeddingClient;
     private final ProgramEmbeddingBatchService programEmbeddingBatchService;
+    private final RequiredDocsAssignmentService requiredDocsAssignmentService;
 
     public AdminSyncController(BenefitProgramIngestService ingestService,
                                 BenefitProgramRepository repository,
@@ -51,7 +53,8 @@ public class AdminSyncController {
                                 RegionCodeRepository regionCodeRepository,
                                 RegionNameMappingService regionNameMappingService,
                                 GeminiEmbeddingClient geminiEmbeddingClient,
-                                ProgramEmbeddingBatchService programEmbeddingBatchService) {
+                                ProgramEmbeddingBatchService programEmbeddingBatchService,
+                                RequiredDocsAssignmentService requiredDocsAssignmentService) {
         this.ingestService = ingestService;
         this.repository = repository;
         this.regionCodeSyncService = regionCodeSyncService;
@@ -59,6 +62,7 @@ public class AdminSyncController {
         this.regionNameMappingService = regionNameMappingService;
         this.geminiEmbeddingClient = geminiEmbeddingClient;
         this.programEmbeddingBatchService = programEmbeddingBatchService;
+        this.requiredDocsAssignmentService = requiredDocsAssignmentService;
     }
 
     @PostMapping("/api/admin/sync-central")
@@ -228,5 +232,20 @@ public class AdminSyncController {
                 "distinctCount", distinct.size(),
                 "samples", distinct
         );
+    }
+
+    /**
+     * ⚠️ 2026-10-07 추가: RequiredDocsAssignmentService가 구현은 돼 있었는데 이걸 실제로
+     * 호출하는 엔드포인트/스케줄러가 없어서 한 번도 실행된 적이 없었다 — 그래서 매칭 결과에서
+     * 룰테이블 1건(재난지원금) 빼고 나머지는 전부 requiredDocs가 빈 배열로 나왔었다.
+     * 지금은 수동 실행용으로 추가. 카테고리 기반 기본 체크리스트라 실패/재시도 개념이 따로
+     * 없고, 다시 호출해도 이미 채워진 건 findNeedingDocsExtraction() 대상에서 자연히
+     * 빠지므로 멱등하다.
+     */
+    @PostMapping("/api/admin/assign-required-docs")
+    public String assignRequiredDocs() {
+        log.info("[임시 테스트 엔드포인트] 구비서류 기본 체크리스트 배치 요청 수신");
+        requiredDocsAssignmentService.assignMissingRequiredDocs();
+        return "OK";
     }
 }
